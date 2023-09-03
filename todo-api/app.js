@@ -1,31 +1,36 @@
-import { postgres } from './deps.js';
+import * as todoService from './services/todoService.js';
+import { cacheMethodCalls } from './util/cacheUtil.js';
 
-const sql = postgres({});
+//* Using in-memory caching
+const cachedTodoService = cacheMethodCalls(todoService, ['createTodo']);
 
-const getAllTodos = async () => {
-  const todos = await sql`select * from todos`;
-
-  return Response.json(todos);
+const handleGetAllTodos = async () => {
+  try {
+    const todos = await cachedTodoService.getAllTodos();
+    return Response.json(todos, { status: 200});
+  } catch (err) {
+    return new Response(err.message, { status: 422 });
+  }
 };
 
-const getTodo = async (_request, urlPatternResult) => {
+const handleGetTodo = async (_request, urlPatternResult) => {
   const id = urlPatternResult.pathname.groups.id;
 
   try {
-    const todos = await sql`select * from todos where id = ${id}`;
-    return Response.json(todos[0]);
+    const todo = await cachedTodoService.getTodo(id);
+    return Response.json(todo, { status: 200 });
   } catch (err) {
     return new Response(err.message, { status: 404 });
   }
 };
 
-const createTodo = async (request) => {
+const handleCreateTodo = async (request) => {
   try {
     const body = await request.text();
     const json = await JSON.parse(body);
 
     if (json?.item?.length > 0 || json?.item !== '') {
-      await sql`insert into todos (item) values (${json.item})`;
+      await cachedTodoService.createTodo(json.item);
       return Response.json(json, { status: 200 });
     } else {
       return new Response('Cannot create todo!', { status: 400 });
@@ -35,11 +40,11 @@ const createTodo = async (request) => {
   }
 };
 
-const deleteTodo = async (_request, urlPatternResult) => {
+const handleDeleteTodo = async (_request, urlPatternResult) => {
   const id = urlPatternResult.pathname.groups.id;
 
   try {
-    const todo = await sql`delete from todos where id = ${id}`;
+    await cachedTodoService.deleteTodo(id);
     return new Response(null, { status: 204 });
   } catch (err) {
     return new Response(err.message, { status: 404 });
@@ -50,22 +55,22 @@ const urlMapping = [
   {
     method: 'GET',
     pattern: new URLPattern({ pathname: '/todos' }),
-    fn: getAllTodos,
+    fn: handleGetAllTodos,
   },
   {
     method: 'GET',
     pattern: new URLPattern({ pathname: '/todos/:id' }),
-    fn: getTodo,
+    fn: handleGetTodo,
   },
   {
     method: 'POST',
     pattern: new URLPattern({ pathname: '/todos' }),
-    fn: createTodo,
+    fn: handleCreateTodo,
   },
   {
     method: 'DELETE',
     pattern: new URLPattern({ pathname: '/todos/:id' }),
-    fn: deleteTodo,
+    fn: handleDeleteTodo,
   },
 ];
 
