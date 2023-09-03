@@ -1,9 +1,11 @@
 # limerence
-DBSWA assignment: Redis Cache for TODO API
+
+DBSWA assignment: Redis Cache for TODO API. 
+
+Using redis cache. All database queries are cached for the sake of this exercise, but it is not recommended,
+only expensive queries should be cache.
 
 ## CLI Commands
-Using in-memory caching
-
 
 ```bash
 # build todo-api
@@ -15,4 +17,3 @@ $ cd limerence && docker compose up
 # stop running container
 $ docker compose down
 ```
-

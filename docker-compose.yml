@@ -16,6 +16,14 @@ services:
     env_file:
       - project.env
   
+  redis:
+    image: redis:latest
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    expose:
+      - 6379
+  
   todo-api:
     build: todo-api
     image: todo-api
@@ -28,6 +36,7 @@ services:
     depends_on:
       - database
       - flyway
+      - redis
     env_file:
       - project.env
     deploy:
