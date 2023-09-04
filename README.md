@@ -11,9 +11,12 @@ only expensive queries should be cache.
 # build todo-api
 $ cd todo-api && docker build -t todo-api .
 
-# start container at the root directory
+# start container at the root directory; application running on port 7800
 $ cd limerence && docker compose up
 
 # stop running container
 $ docker compose down
+
+# run K6 performance measuring
+$ k6 run performance-test-get-todos.js
 ```
